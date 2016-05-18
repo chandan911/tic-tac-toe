@@ -38,9 +38,11 @@ object Api {
     cells => {
       val cellsOccupiedByX = cells.filter(_.cellType == OccupiedBy(X)).map(_.position)
       val cellsOccupiedByO = cells.filter(_.cellType == OccupiedBy(O)).map(_.position)
-      if (allWinningCombinations contains cellsOccupiedByX) Some(X)
-      else if (allWinningCombinations contains cellsOccupiedByO) Some(O)
-      else None
+
+      allWinningCombinations.find(_ == cellsOccupiedByX)
+        .map(_ => X)
+        .orElse(allWinningCombinations.find(_ == cellsOccupiedByO)
+        .map(_ => O))
     }
 
   def playerAt: HasBeenPlayed => Position => Option[Player] =
