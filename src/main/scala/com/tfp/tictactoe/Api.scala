@@ -51,12 +51,12 @@ object Api {
       case Cell(_, _)                  => None
     }
 
-  def takeBack: HasBeenPlayed => IsPlayable = ???
-
   def isDraw: HasFinished => Boolean =
     board => whoWon(board).isEmpty
 
   def allPositionsOf: Player => List[Cell] => List[Position] =
     player => cells => cells.filter(_.cellType == OccupiedBy(player)).map(_.position)
+
+  def takeBack: HasBeenPlayed => IsPlayable = ???
 
 }
