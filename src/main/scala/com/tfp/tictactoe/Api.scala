@@ -36,12 +36,12 @@ object Api {
 
   def winnerFrom: List[Cell] => Option[Player] =
     cells => {
-      val cellsOccupiedByX = cells.filter(_.cellType == OccupiedBy(X)).map(_.position)
-      val cellsOccupiedByO = cells.filter(_.cellType == OccupiedBy(O)).map(_.position)
+      val positionsOccupiedByX = allPositionsOf(X)(cells)
+      val positionsOccupiedByO = allPositionsOf(O)(cells)
 
-      allWinningCombinations.find(_ == cellsOccupiedByX)
+      allWinningCombinations.find(_ == positionsOccupiedByX)
         .map(_ => X)
-        .orElse(allWinningCombinations.find(_ == cellsOccupiedByO)
+        .orElse(allWinningCombinations.find(_ == positionsOccupiedByO)
         .map(_ => O))
     }
 
@@ -55,5 +55,8 @@ object Api {
 
   def isDraw: HasFinished => Boolean =
     board => whoWon(board).isEmpty
+
+  def allPositionsOf: Player => List[Cell] => List[Position] =
+    player => cells => cells.filter(_.cellType == OccupiedBy(player)).map(_.position)
 
 }
