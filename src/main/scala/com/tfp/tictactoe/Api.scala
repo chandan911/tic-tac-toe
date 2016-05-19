@@ -13,9 +13,9 @@ object Api {
       SuccessfulMove(InPlayBoard(resultingCells))
 
     case inPlayBoard: InPlayBoard =>
-      inPlayBoard.cells.find(_.position == position) match {
-        case Some(Cell(OccupiedBy(_), _)) => FailedMove
-        case _                            =>
+      inPlayBoard.cells.find(_.position == position).map(_.cellType) match {
+        case Some(OccupiedBy(_)) => FailedMove
+        case _                   =>
           val resultingCells = inPlayBoard.cells map {
             case Cell(_, pos) if pos == position => Cell(OccupiedBy(player), position)
             case x                               => x
