@@ -6,14 +6,14 @@ object Api {
 
   def move: Player => Position => IsPlayable => MoveResult = player => position => {
     case UnPlayedBoard =>
-      val resultingCells = initialAllEmptyCells map (cellWithPlayer(_)(position)(player))
+      val resultingCells = getNewCellsFromCurrent(initialAllEmptyCells)(position)(player)(cellWithPlayer)
       SuccessfulMove(InPlayBoard(resultingCells))
 
     case inPlayBoard: InPlayBoard =>
       inPlayBoard.cells.find(_.position == position).map(_.cellType) match {
         case Some(OccupiedBy(_)) => FailedMove
         case _                   =>
-          val resultingCells = inPlayBoard.cells map (cellWithPlayer(_)(position)(player))
+          val resultingCells = getNewCellsFromCurrent(inPlayBoard.cells)(position)(player)(cellWithPlayer)
           val resultingBoard =
             if (gameOverWith(resultingCells)) GameOverBoard(resultingCells)
             else if (!resultingCells.exists(_.cellType == Empty)) FinishedBoard(resultingCells)
@@ -53,6 +53,9 @@ object Api {
       case Cell(_, pos) if pos == position => Cell(OccupiedBy(player), position)
       case everyOtherCase                  => everyOtherCase
     }
+
+  def getNewCellsFromCurrent: List[Cell] => Position => Player => (Cell => Position => Player => Cell) => List[Cell] =
+    cells => position => player => f => cells.map(f(_)(position)(player))
 
   def takeBack: HasBeenPlayed => IsPlayable = ???
 
