@@ -1,6 +1,6 @@
 package com.tfp.tictactoe
 
-import com.tfp.tictactoe.TicTacToe.{allWinningCombinations, initialAllEmptyCells}
+import com.tfp.tictactoe.TicTacToe.allWinningCombinations
 
 object Api {
 
