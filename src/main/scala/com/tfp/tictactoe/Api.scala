@@ -4,31 +4,37 @@ import com.tfp.tictactoe.TicTacToe.{allWinningCombinations, initialAllEmptyCells
 
 object Api {
 
-  def move: Player => Position => IsPlayable => MoveResult = player => position => {
-    case UnPlayedBoard =>
-      val resultingCells = transformCurrentCellsTo(cellWithPlayer)(initialAllEmptyCells)(position)(player)
-      SuccessfulMove(InPlayBoard(resultingCells))
+  def move: Player => Position => IsPlayable => MoveResult =
+    player => position => board => playerAt(board)(position)
+                                     .map(_ => FailedMove)
+                                     .getOrElse(successfulMoveFrom(board)(player)(position))
 
-    case inPlayBoard: InPlayBoard =>
-      cellAtPosition(position)(inPlayBoard.cells).map(_.cellType) match {
-        case Some(OccupiedBy(_)) => FailedMove
-        case _                   =>
-          val resultingCells = transformCurrentCellsTo(cellWithPlayer)(inPlayBoard.cells)(position)(player)
-          val resultingBoard =
-            if (gameOverWith(resultingCells)) GameOverBoard(resultingCells)
-            else if (!resultingCells.exists(_.cellType == Empty)) FinishedBoard(resultingCells)
-            else InPlayBoard(resultingCells)
-          SuccessfulMove(resultingBoard)
-      }
-  }
-
-  def gameOverWith: List[Cell] => Boolean =
-    cells => winnerFrom(cells).isDefined
+  def playerAt: Board => Position => Option[Player] =
+    board => position => cellAtPosition(position)(board.cells) flatMap {
+      case Cell(OccupiedBy(player), _) => Some(player)
+      case Cell(_, _)                  => None
+    }
 
   def whoWon: HasFinished => Option[Player] =
     board => winnerFrom(board.cells)
 
-  def winnerFrom: List[Cell] => Option[Player] =
+  def isDraw: HasFinished => Boolean =
+    board => whoWon(board).isEmpty
+
+  private def successfulMoveFrom: IsPlayable => Player => Position => SuccessfulMove =
+    playableBoard => player => position => {
+      val resultingCells = transformCurrentCellsTo(cellWithPlayer)(playableBoard.cells)(position)(player)
+      val resultingBoard =
+        if (gameOverWith(resultingCells)) GameOverBoard(resultingCells)
+        else if (!resultingCells.exists(_.cellType == Empty)) FinishedBoard(resultingCells)
+        else InPlayBoard(resultingCells)
+      SuccessfulMove(resultingBoard)
+    }
+
+  private def gameOverWith: List[Cell] => Boolean =
+    cells => winnerFrom(cells).isDefined
+
+  private def winnerFrom: List[Cell] => Option[Player] =
     cells => {
       allWinningCombinations.find(_ == positionsOf(X)(cells))
         .map(_ => X)
@@ -36,28 +42,19 @@ object Api {
         .map(_ => O))
     }
 
-  def playerAt: HasBeenPlayed => Position => Option[Player] =
-    board => position => cellAtPosition(position)(board.cells) flatMap {
-      case Cell(OccupiedBy(player), _) => Some(player)
-      case Cell(_, _)                  => None
-    }
-
-  def isDraw: HasFinished => Boolean =
-    board => whoWon(board).isEmpty
-
-  def positionsOf: Player => List[Cell] => List[Position] =
+  private def positionsOf: Player => List[Cell] => List[Position] =
     player => cells => cells.filter(_.cellType == OccupiedBy(player)).map(_.position)
 
-  def cellWithPlayer: Cell => Position => Player => Cell =
+  private def cellWithPlayer: Cell => Position => Player => Cell =
     cell => position => player => cell match {
       case Cell(_, pos) if pos == position => Cell(OccupiedBy(player), position)
       case everyOtherCase                  => everyOtherCase
     }
 
-  def cellAtPosition: Position => List[Cell] => Option[Cell] =
+  private def cellAtPosition: Position => List[Cell] => Option[Cell] =
     position => cells => cells find(_.position == position)
 
-  def transformCurrentCellsTo: (Cell => Position => Player => Cell) => List[Cell] => Position => Player => List[Cell] =
+  private def transformCurrentCellsTo: (Cell => Position => Player => Cell) => List[Cell] => Position => Player => List[Cell] =
     f => cells => position => player => cells.map(f(_)(position)(player))
 
   def takeBack: HasBeenPlayed => IsPlayable = ???
