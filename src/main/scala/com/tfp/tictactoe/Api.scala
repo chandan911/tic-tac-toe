@@ -10,7 +10,7 @@ object Api {
       SuccessfulMove(InPlayBoard(resultingCells))
 
     case inPlayBoard: InPlayBoard =>
-      inPlayBoard.cells.find(_.position == position).map(_.cellType) match {
+      cellAtPosition(position)(inPlayBoard.cells).map(_.cellType) match {
         case Some(OccupiedBy(_)) => FailedMove
         case _                   =>
           val resultingCells = transformCurrentCellsTo(cellWithPlayer)(inPlayBoard.cells)(position)(player)
@@ -37,7 +37,7 @@ object Api {
     }
 
   def playerAt: HasBeenPlayed => Position => Option[Player] =
-    board => position => board.cells find(_.position == position) flatMap {
+    board => position => cellAtPosition(position)(board.cells) flatMap {
       case Cell(OccupiedBy(player), _) => Some(player)
       case Cell(_, _)                  => None
     }
@@ -53,6 +53,9 @@ object Api {
       case Cell(_, pos) if pos == position => Cell(OccupiedBy(player), position)
       case everyOtherCase                  => everyOtherCase
     }
+
+  def cellAtPosition: Position => List[Cell] => Option[Cell] =
+    position => cells => cells find(_.position == position)
 
   def transformCurrentCellsTo: (Cell => Position => Player => Cell) => List[Cell] => Position => Player => List[Cell] =
     f => cells => position => player => cells.map(f(_)(position)(player))
