@@ -2,7 +2,7 @@ package com.tfp.tictactoe
 
 import com.tfp.tictactoe.TicTacToe.allWinningCombinations
 
-object ApiUncurried {
+object Api {
 
   def move(player: Player, position: Position, board: IsPlayable): MoveResult =
     playerAt(board, position)
