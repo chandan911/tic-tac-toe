@@ -1,30 +1,30 @@
 package com.tfp.tictactoe
 
-import com.tfp.tictactoe.TicTacToe.allWinningCombinations
+import com.tfp.tictactoe.GameConfig.allWinningCombinations
 
 object Api {
 
-  def move(player: Player, position: Position, board: IsPlayable): MoveResult =
-    playerAt(board, position)
-      .map(_ => FailedMove)
-      .getOrElse(successfulMoveFrom(board, player, position))
-
   def playerAt(board: Board, position: Position): Option[Player] =
-    cellAtPosition(position)(board.cells) flatMap {
+    cellAtPosition(position, board.cells) flatMap {
       case Cell(OccupiedBy(player), _) => Some(player)
       case Cell(_, _) => None
     }
 
-  def whoWon(board: HasFinished): Option[Player] =
+  def move(player: Player, position: Position, board: PlayableBoard): MoveResult =
+    playerAt(board, position)
+      .map(_ => FailedMove)
+      .getOrElse(successfulMoveFrom(board, player, position))
+
+  def whoWon(board: NonPlayableBoard): Option[Player] =
     winnerFrom(board.cells)
 
-  def isDraw(board: HasFinished): Boolean = whoWon(board).isEmpty
+  def isDraw(board: NonPlayableBoard): Boolean = whoWon(board).isEmpty
 
-  def takeBack(board: HasBeenPlayed): IsPlayable = ???
+  def takeBack(board: PlayedBoard): PlayableBoard = ???
 
-  private def successfulMoveFrom(playableBoard: IsPlayable, player: Player, position: Position): SuccessfulMove = {
+  private def successfulMoveFrom(playableBoard: PlayableBoard, player: Player, position: Position): SuccessfulMove = {
     val resultingCells = transformCurrentCellsTo(cellWithPlayer, playableBoard.cells, position, player)
-    val resultingBoard =
+    val resultingBoard: PlayedBoard =
       if (gameOverWith(resultingCells)) GameOverBoard(resultingCells)
       else if (!resultingCells.exists(_.cellType == Empty)) FinishedBoard(resultingCells)
       else InPlayBoard(resultingCells)
@@ -48,12 +48,11 @@ object Api {
     case everyOtherCase => everyOtherCase
   }
 
-  private def cellAtPosition: Position => List[Cell] => Option[Cell] =
-    position => cells => cells find (_.position == position)
+  private def cellAtPosition(position: Position, cells: List[Cell]): Option[Cell] = cells find (_.position == position)
 
-  private def transformCurrentCellsTo(f: (Cell, Position, Player) => Cell,
+  private def transformCurrentCellsTo(function: (Cell, Position, Player) => Cell,
                                       cells: List[Cell],
                                       position: Position,
-                                      player: Player): List[Cell] = cells.map(f(_, position, player))
+                                      player: Player): List[Cell] = cells.map(function(_, position, player))
 
 }

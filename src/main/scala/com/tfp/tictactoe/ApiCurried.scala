@@ -1,10 +1,10 @@
 package com.tfp.tictactoe
 
-import com.tfp.tictactoe.TicTacToe.allWinningCombinations
+import com.tfp.tictactoe.GameConfig.allWinningCombinations
 
 object ApiCurried {
 
-  def move: Player => Position => IsPlayable => MoveResult =
+  def move: Player => Position => PlayableBoard => MoveResult =
     player => position => board => playerAt(board)(position)
                                      .map(_ => FailedMove)
                                      .getOrElse(successfulMoveFrom(board)(player)(position))
@@ -15,13 +15,13 @@ object ApiCurried {
       case Cell(_, _)                  => None
     }
 
-  def whoWon: HasFinished => Option[Player] =
+  def whoWon: NonPlayableBoard => Option[Player] =
     board => winnerFrom(board.cells)
 
-  def isDraw: HasFinished => Boolean =
+  def isDraw: NonPlayableBoard => Boolean =
     board => whoWon(board).isEmpty
 
-  private def successfulMoveFrom: IsPlayable => Player => Position => SuccessfulMove =
+  private def successfulMoveFrom: PlayableBoard => Player => Position => SuccessfulMove =
     playableBoard => player => position => {
       val resultingCells = transformCurrentCellsTo(cellWithPlayer)(playableBoard.cells)(position)(player)
       val resultingBoard =
@@ -57,6 +57,6 @@ object ApiCurried {
   private def transformCurrentCellsTo: (Cell => Position => Player => Cell) => List[Cell] => Position => Player => List[Cell] =
     f => cells => position => player => cells.map(f(_)(position)(player))
 
-  def takeBack: HasBeenPlayed => IsPlayable = ???
+  def takeBack: PlayedBoard => PlayableBoard = ???
 
 }

@@ -1,6 +1,6 @@
 package com.tfp.tictactoe
 
-object TicTacToe {
+object GameConfig {
 
   val initialAllEmptyCells: List[Cell] = {
     for {
